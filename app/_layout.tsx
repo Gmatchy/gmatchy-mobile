@@ -1,6 +1,7 @@
 import { AuthContext, AuthProvider } from "@/contexts/auth-context";
 import { useAppInit } from "@/hooks/use-app-init";
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import "@/services/remote/axios-instance";
 import {
   DarkTheme,
   DefaultTheme,
@@ -9,7 +10,6 @@ import {
 import { Stack } from "expo-router";
 import { useContext } from "react";
 import "react-native-reanimated";
-
 export default function RootLayout() {
   return (
     <AuthProvider>
@@ -30,7 +30,12 @@ function RootNavigation() {
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <Stack screenOptions={{ headerShown: false }}>
-        {isAuth ? <Stack.Screen name="main" /> : <Stack.Screen name="auth" />}
+        <Stack.Protected guard={isAuth}>
+          <Stack.Screen name="main" />
+        </Stack.Protected>
+        <Stack.Protected guard={!isAuth}>
+          <Stack.Screen name="auth" />
+        </Stack.Protected>
       </Stack>
     </ThemeProvider>
   );

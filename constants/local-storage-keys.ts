@@ -1,2 +1,2 @@
-export const TokenKey = "@tokenKey";
-export const RefreshTokenKey = "@refreshToken";
+export const TokenKey = "tokenKey";
+export const RefreshTokenKey = "refreshToken";

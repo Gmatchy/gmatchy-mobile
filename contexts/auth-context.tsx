@@ -1,7 +1,8 @@
 import { RefreshTokenKey, TokenKey } from "@/constants/local-storage-keys";
-import AuthManager from "@/services/auth-manager";
-import axiosInstance from "@/services/axios-instance";
-import localStorage from "@/services/local-storage";
+import AuthManager from "@/services/local/auth-manager";
+import localStorage from "@/services/local/local-storage";
+import axiosInstance from "@/services/remote/axios-instance";
+import { useRouter } from "expo-router";
 import {
   createContext,
   useCallback,
@@ -10,7 +11,6 @@ import {
   useState,
   type PropsWithChildren,
 } from "react";
-
 export const AuthContext = createContext<{
   signIn: (accessToken: string, refreshToken: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -24,12 +24,9 @@ export const AuthContext = createContext<{
 });
 
 export function AuthProvider({ children }: PropsWithChildren) {
-  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [refreshToken, setRefreshToken] = useState<string | null>(null);
-
-  const isAuth = !!accessToken;
-
+  const [isAuth, setIsAuth] = useState(false);
+  const router = useRouter();
   const setAxiosAuthHeader = useCallback((accessToken: string | null) => {
     if (accessToken) {
       axiosInstance.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
@@ -47,8 +44,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
           RefreshTokenKey,
           refreshToken
         );
-        setAccessToken(accessToken);
-        setRefreshToken(refreshToken);
+        setIsAuth(true);
         setAxiosAuthHeader(accessToken);
       } catch (error) {
         console.log("SignIn error:", error);
@@ -60,31 +56,38 @@ export function AuthProvider({ children }: PropsWithChildren) {
   );
 
   const signOut = useCallback(async () => {
-    await localStorage.removeSecureLocalStorageItem(TokenKey);
-    await localStorage.removeSecureLocalStorageItem(RefreshTokenKey);
-    setAccessToken(null);
-    setRefreshToken(null);
-    setAxiosAuthHeader(null);
+    try {
+      await localStorage.removeSecureLocalStorageItem(TokenKey);
+      await localStorage.removeSecureLocalStorageItem(RefreshTokenKey);
+      setIsAuth(false);
+      setAxiosAuthHeader(null);
+
+      router.navigate("/auth/login");
+    } catch (error) {
+      console.log("error while logout: " + error);
+    }
   }, [setAxiosAuthHeader]);
 
   // Auto-login on app start
-  useEffect(() => {
-    const restoreToken = async () => {
-      const storedToken = await localStorage.getSecureLocalStorageItem(
-        TokenKey
-      );
-      const storedRefresh = await localStorage.getSecureLocalStorageItem(
-        RefreshTokenKey
-      );
-      if (storedToken) {
-        setAccessToken(storedToken);
-        setAxiosAuthHeader(storedToken);
-      }
-      setIsLoading(false);
-      if (storedRefresh) setRefreshToken(storedRefresh);
-    };
-    restoreToken();
-  }, [setAxiosAuthHeader]);
+  // useEffect(() => {
+  //   const restoreToken = async () => {
+  //     const storedToken = await localStorage.getSecureLocalStorageItem(
+  //       TokenKey
+  //     );
+  //     const storedRefresh = await localStorage.getSecureLocalStorageItem(
+  //       RefreshTokenKey
+  //     );
+  //     if (storedToken && storedRefresh) {
+  //       setAxiosAuthHeader(storedToken);
+  //       setIsAuth(true);
+  //     } else {
+  //       setIsAuth(false);
+  //     }
+
+  //     setIsLoading(false);
+  //   };
+  //   restoreToken();
+  // }, [setAxiosAuthHeader]);
 
   useEffect(() => {
     AuthManager.setSignOut(signOut);
@@ -99,5 +102,16 @@ export function AuthProvider({ children }: PropsWithChildren) {
     }),
     [signIn, signOut, isLoading, isAuth]
   );
-  return <AuthContext value={value}>{children}</AuthContext>;
+  return (
+    <AuthContext
+      value={{
+        signIn,
+        signOut,
+        isLoading,
+        isAuth,
+      }}
+    >
+      {children}
+    </AuthContext>
+  );
 }

@@ -1,14 +1,32 @@
 import { StyleSheet } from "react-native";
 
+import { ThemedButton } from "@/components/themed-button";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { AuthContext } from "@/contexts/auth-context";
+import { loginRequest } from "@/services/remote/auth.api";
+import { useContext } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function HomeScreen() {
+export default function LoginScreen() {
+  const authContext = useContext(AuthContext);
+  console.log("print login");
+  const submit = async () => {
+    try {
+      const { refreshToken, accessToken } = await loginRequest({
+        phone: "+971501231234",
+        password: "12345678",
+      });
+      authContext.signIn(accessToken, refreshToken);
+    } catch (error) {
+      console.log("Error While Login: ", error);
+    }
+  };
   return (
     <SafeAreaView>
       <ThemedView>
         <ThemedText>Login</ThemedText>
+        <ThemedButton title="clock" onPress={submit} />
       </ThemedView>
     </SafeAreaView>
   );

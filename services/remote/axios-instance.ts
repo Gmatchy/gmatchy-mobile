@@ -1,8 +1,8 @@
 import { RefreshTokenKey, TokenKey } from "@/constants/local-storage-keys";
 import axios from "axios";
-import AuthManager from "./auth-manager";
-import localStorage from "./local-storage";
-const baseURL = "https://api.example.com";
+import AuthManager from "../local/auth-manager";
+import localStorage from "../local/local-storage";
+const baseURL = process.env.EXPO_PUBLIC_BASE_URL;
 
 const axiosInstance = axios.create({
   baseURL,
@@ -67,7 +67,7 @@ axiosInstance.interceptors.response.use(
           AuthManager.triggerSignOut();
         }
 
-        const response = await axios.post(`${baseURL}/auth/refresh-token`, {
+        const response = await axiosInstance.post(`auth/refresh`, {
           refreshToken,
         });
 
