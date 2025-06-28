@@ -2,7 +2,6 @@ import { RefreshTokenKey, TokenKey } from "@/constants/local-storage-keys";
 import AuthManager from "@/services/local/auth-manager";
 import localStorage from "@/services/local/local-storage";
 import axiosInstance from "@/services/remote/axios-instance";
-import { useRouter } from "expo-router";
 import {
   createContext,
   useCallback,
@@ -26,7 +25,7 @@ export const AuthContext = createContext<{
 export function AuthProvider({ children }: PropsWithChildren) {
   const [isLoading, setIsLoading] = useState(false);
   const [isAuth, setIsAuth] = useState(false);
-  const router = useRouter();
+
   const setAxiosAuthHeader = useCallback((accessToken: string | null) => {
     if (accessToken) {
       axiosInstance.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
@@ -61,33 +60,31 @@ export function AuthProvider({ children }: PropsWithChildren) {
       await localStorage.removeSecureLocalStorageItem(RefreshTokenKey);
       setIsAuth(false);
       setAxiosAuthHeader(null);
-
-      router.navigate("/auth/login");
     } catch (error) {
       console.log("error while logout: " + error);
     }
   }, [setAxiosAuthHeader]);
 
   // Auto-login on app start
-  // useEffect(() => {
-  //   const restoreToken = async () => {
-  //     const storedToken = await localStorage.getSecureLocalStorageItem(
-  //       TokenKey
-  //     );
-  //     const storedRefresh = await localStorage.getSecureLocalStorageItem(
-  //       RefreshTokenKey
-  //     );
-  //     if (storedToken && storedRefresh) {
-  //       setAxiosAuthHeader(storedToken);
-  //       setIsAuth(true);
-  //     } else {
-  //       setIsAuth(false);
-  //     }
+  useEffect(() => {
+    const restoreToken = async () => {
+      const storedToken = await localStorage.getSecureLocalStorageItem(
+        TokenKey
+      );
+      const storedRefresh = await localStorage.getSecureLocalStorageItem(
+        RefreshTokenKey
+      );
+      if (storedToken && storedRefresh) {
+        setAxiosAuthHeader(storedToken);
+        setIsAuth(true);
+      } else {
+        setIsAuth(false);
+      }
 
-  //     setIsLoading(false);
-  //   };
-  //   restoreToken();
-  // }, [setAxiosAuthHeader]);
+      setIsLoading(false);
+    };
+    restoreToken();
+  }, [setAxiosAuthHeader]);
 
   useEffect(() => {
     AuthManager.setSignOut(signOut);
@@ -102,16 +99,5 @@ export function AuthProvider({ children }: PropsWithChildren) {
     }),
     [signIn, signOut, isLoading, isAuth]
   );
-  return (
-    <AuthContext
-      value={{
-        signIn,
-        signOut,
-        isLoading,
-        isAuth,
-      }}
-    >
-      {children}
-    </AuthContext>
-  );
+  return <AuthContext value={value}>{children}</AuthContext>;
 }
