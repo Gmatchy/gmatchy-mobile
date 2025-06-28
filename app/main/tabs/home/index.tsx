@@ -4,6 +4,7 @@ import { ThemedButton } from "@/components/themed-button";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { AuthContext } from "@/contexts/auth-context";
+import { getProfileRequest } from "@/services/remote/auth.api";
 import { useContext } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -14,6 +15,12 @@ export default function HomeScreen() {
       <ThemedView>
         <ThemedText>Hello Gmathcy-Home</ThemedText>
         <ThemedButton title="logout" onPress={signOut} />
+        <ThemedButton
+          title="get"
+          onPress={() => {
+            getProfileRequest();
+          }}
+        />
       </ThemedView>
     </SafeAreaView>
   );

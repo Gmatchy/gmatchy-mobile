@@ -44,7 +44,6 @@ axiosInstance.interceptors.response.use(
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({
@@ -59,6 +58,9 @@ axiosInstance.interceptors.response.use(
 
       isRefreshing = true;
 
+      // @test
+      // await new Promise((res) => setTimeout(res, 5000));
+
       try {
         const refreshToken = await localStorage.getSecureLocalStorageItem(
           RefreshTokenKey
@@ -70,7 +72,6 @@ axiosInstance.interceptors.response.use(
         const response = await axiosInstance.post(`auth/refresh`, {
           refreshToken,
         });
-
         const newAccessToken = response.data.accessToken;
         const newRefreshToken = response.data.refreshToken;
 
@@ -93,7 +94,6 @@ axiosInstance.interceptors.response.use(
         isRefreshing = false;
       }
     }
-
     return Promise.reject(error);
   }
 );

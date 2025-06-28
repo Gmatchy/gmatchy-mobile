@@ -12,6 +12,7 @@ export type LoginRequestParam = {
   phone: string;
   password: string;
 };
+
 export const loginRequest = async ({
   phone,
   password,
@@ -22,6 +23,21 @@ export const loginRequest = async ({
       password,
     });
     return response.data;
+  } catch (e: any) {
+    if (e.isAxiosError) {
+      const error = e as AxiosError;
+      console.log(error.response?.data);
+    }
+    console.log("Error While loginRequest: " + e.data);
+    throw e;
+  }
+};
+
+export const getProfileRequest = async () => {
+  try {
+    const response = await axiosInstance.get("auth/profile");
+
+    console.log("gget: " + JSON.stringify(response.data));
   } catch (e: any) {
     if (e.isAxiosError) {
       const error = e as AxiosError;
